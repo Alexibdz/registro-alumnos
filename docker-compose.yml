@@ -1,0 +1,36 @@
+services:
+  web:
+    build: .
+    image: lanin173/registro-alumnos:latest
+    container_name: registro-alumnos-web
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: escuela
+      DB_USER: usuario
+      DB_PASSWORD: secreto
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    container_name: registro-alumnos-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: escuela
+      MYSQL_USER: usuario
+      MYSQL_PASSWORD: secreto
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  db_data:
